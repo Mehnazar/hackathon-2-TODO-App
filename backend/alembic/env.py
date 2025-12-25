@@ -2,11 +2,16 @@ from logging.config import fileConfig
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+# Load environment variables from .env file
+env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -26,6 +31,8 @@ if DATABASE_URL:
     if DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
     config.set_main_option("sqlalchemy.url", DATABASE_URL)
+else:
+    raise RuntimeError("DATABASE_URL environment variable is required. Please create .env file with DATABASE_URL.")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
