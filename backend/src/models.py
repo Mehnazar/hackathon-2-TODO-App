@@ -19,6 +19,7 @@ class User(SQLModel, table=True):
     id: str = Field(primary_key=True)  # Better Auth format: usr_xxxxx
     email: str = Field(unique=True, index=True)
     name: Optional[str] = None
+    password_hash: str = Field()  # Bcrypt hashed password
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

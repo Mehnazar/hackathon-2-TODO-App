@@ -5,6 +5,7 @@ Evolution of Todo - Phase II Backend
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from src.routes import auth
 
 # Create FastAPI app
 app = FastAPI(
@@ -40,8 +41,5 @@ async def root():
     }
 
 
-# Routes will be registered here in future tasks
-# Example:
-# from src.routes import auth, tasks
-# app.include_router(auth.router)
-# app.include_router(tasks.router)
+# Register routers
+app.include_router(auth.router)
