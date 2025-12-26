@@ -79,8 +79,7 @@ async def register(
         id=user_id,
         email=request.email,
         name=request.name,
-        password_hash=hashed_password,
-        created_at=datetime.now(timezone.utc)
+        password_hash=hashed_password
     )
 
     db.add(user)

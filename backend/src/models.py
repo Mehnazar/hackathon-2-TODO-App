@@ -4,7 +4,7 @@ SQLModel database models.
 References: specs/database/schema.md
 """
 from sqlmodel import Field, SQLModel
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 
@@ -13,6 +13,7 @@ class User(SQLModel, table=True):
     User model for authentication.
 
     Managed by Better Auth in Phase II.
+    All timestamps stored in UTC as timezone-naive datetimes.
     """
     __tablename__ = "users"
 
@@ -20,14 +21,14 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, index=True)
     name: Optional[str] = None
     password_hash: str = Field()  # Bcrypt hashed password
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Task(SQLModel, table=True):
     """
     Task model for todo items.
 
-    All timestamps stored in UTC (per CONSTITUTION.md timezone handling).
+    All timestamps stored in UTC as timezone-naive datetimes (per CONSTITUTION.md timezone handling).
     """
     __tablename__ = "tasks"
 
@@ -36,5 +37,5 @@ class Task(SQLModel, table=True):
     title: str = Field(max_length=200)
     description: str = Field(default="", max_length=1000)
     completed: bool = Field(default=False, index=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

@@ -33,6 +33,7 @@ engine = create_async_engine(
     max_overflow=40,  # Additional connections under load
     pool_timeout=30,  # Wait time for available connection (seconds)
     pool_recycle=3600,  # Recycle connections after 1 hour
+    pool_pre_ping=True,  # Test connections before use (important for Neon)
 )
 
 # Create async session factory

@@ -140,7 +140,7 @@ async def create_task(
         )
 
     # Create task
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     task = Task(
         user_id=user_id,
         title=request.title,
@@ -287,7 +287,7 @@ async def update_task(
         task.completed = request.completed
 
     # Always update updated_at timestamp
-    task.updated_at = datetime.now(timezone.utc)
+    task.updated_at = datetime.utcnow()
 
     await db.commit()
     await db.refresh(task)
@@ -415,7 +415,7 @@ async def toggle_task_completion(
 
     # Toggle completion status
     task.completed = not task.completed
-    task.updated_at = datetime.now(timezone.utc)
+    task.updated_at = datetime.utcnow()
 
     await db.commit()
     await db.refresh(task)

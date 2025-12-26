@@ -1,43 +1,95 @@
 'use client'
 
-import type { Task } from '@/types/task'
+import { Circle, CheckCircle2, Edit2, Trash2 } from 'lucide-react'
+import { Task } from '@/types/task'
+import { Card } from './ui/Card'
+import { Button } from './ui/Button'
+import { Badge } from './ui/Badge'
 
 interface TaskItemProps {
   task: Task
-  onToggle: (taskId: number) => void
-  onDelete: (taskId: number) => void
+  onToggle: (taskId: number) => Promise<void>
+  onDelete: (taskId: number) => Promise<void>
+  onEdit?: (task: Task) => void
 }
 
-export default function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
+export default function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diffInSeconds < 60) return 'Just now'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+
+    return date.toLocaleDateString()
+  }
+
   return (
-    <div className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-      <input
-        type="checkbox"
-        checked={task.completed}
-        onChange={() => onToggle(task.id)}
-        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-      />
+    <Card hover className="transition-all duration-200">
+      <div className="flex items-start gap-4">
+        {/* Completion Toggle Icon */}
+        <button
+          onClick={() => onToggle(task.id)}
+          className="flex-shrink-0 mt-1 text-gray-400 hover:text-teal-600 transition-colors"
+          aria-label={task.completed ? 'Mark as incomplete' : 'Mark as complete'}
+        >
+          {task.completed ? (
+            <CheckCircle2 className="w-6 h-6 text-green-600" />
+          ) : (
+            <Circle className="w-6 h-6" />
+          )}
+        </button>
 
-      <div className="flex-1 min-w-0">
-        <h3 className={`text-lg font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-          {task.title}
-        </h3>
-        {task.description && (
-          <p className={`text-sm mt-1 ${task.completed ? 'line-through text-gray-400' : 'text-gray-600'}`}>
-            {task.description}
+        {/* Task Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3
+              className={`text-lg font-medium ${
+                task.completed ? 'line-through text-gray-500' : 'text-gray-900'
+              }`}
+            >
+              {task.title}
+            </h3>
+            <Badge variant={task.completed ? 'success' : 'info'}>
+              {task.completed ? 'Completed' : 'Active'}
+            </Badge>
+          </div>
+
+          {task.description && (
+            <p className="text-sm text-gray-600 mb-2 break-words">
+              {task.description}
+            </p>
+          )}
+
+          <p className="text-xs text-gray-400">
+            Created {formatDate(task.created_at)}
           </p>
-        )}
-        <p className="text-xs text-gray-400 mt-2">
-          Created {new Date(task.created_at).toLocaleString()}
-        </p>
-      </div>
+        </div>
 
-      <button
-        onClick={() => onDelete(task.id)}
-        className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-      >
-        Delete
-      </button>
-    </div>
+        {/* Action Buttons */}
+        <div className="flex-shrink-0 flex gap-2">
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(task)}
+              icon={<Edit2 className="w-4 h-4" />}
+              aria-label="Edit task"
+            />
+          )}
+
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => onDelete(task.id)}
+            icon={<Trash2 className="w-4 h-4" />}
+            aria-label="Delete task"
+          />
+        </div>
+      </div>
+    </Card>
   )
 }
