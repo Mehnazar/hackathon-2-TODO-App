@@ -1,22 +1,14 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckSquare, User, LogOut, Filter as FilterIcon } from 'lucide-react'
+import { Trash2, Edit2, LogOut, User } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { taskAPI } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
 import type { Task } from '@/types/task'
-import TaskItem from '@/components/TaskItem'
-import AddTaskForm from '@/components/AddTaskForm'
-import { TaskSearch } from '@/components/TaskSearch'
-import { TaskFilters, type FilterType } from '@/components/TaskFilters'
 import { EditTaskModal } from '@/components/EditTaskModal'
 import { DeleteConfirmModal } from '@/components/DeleteConfirmModal'
-import { EmptyState } from '@/components/EmptyState'
-import { TaskItemSkeleton } from '@/components/ui/Skeleton'
-import { Button } from '@/components/ui/Button'
-import TaskStats from '@/components/TaskStats'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -24,14 +16,19 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
-
-  // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all')
+  const [newTask, setNewTask] = useState('')
+  const [addingTask, setAddingTask] = useState(false)
 
   // Modal state
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [deletingTask, setDeletingTask] = useState<{ id: number; title: string } | null>(null)
+
+  // Color rotation for vibrant cards
+  const colorRotation = [
+    { bg: 'bg-purple-500', hover: 'hover:bg-purple-600' },
+    { bg: 'bg-orange-500', hover: 'hover:bg-orange-600' },
+    { bg: 'bg-blue-500', hover: 'hover:bg-blue-600' },
+  ]
 
   useEffect(() => {
     // Check authentication
@@ -59,42 +56,29 @@ export default function DashboardPage() {
     }
   }
 
-  const handleAddTask = async (
-    title: string,
-    description: string,
-    priority: 'low' | 'medium' | 'high',
-    dueDate?: string,
-    category?: string
-  ) => {
-    if (!user) return
+  const handleAddTask = async () => {
+    if (!user || !newTask.trim()) return
 
+    setAddingTask(true)
     try {
-      const newTask = await taskAPI.createTask(user.id, {
-        title,
-        description,
-        priority,
-        due_date: dueDate,
-        category
+      const createdTask = await taskAPI.createTask(user.id, {
+        title: newTask.trim(),
+        description: '',
+        priority: 'medium',
       })
-      setTasks([newTask, ...tasks])
-      toast.success('Task created successfully!')
+      setTasks([...tasks, createdTask])
+      setNewTask('')
+      toast.success('Task added!')
     } catch (err: any) {
-      toast.error('Failed to create task')
-      throw err
+      toast.error('Failed to add task')
+    } finally {
+      setAddingTask(false)
     }
   }
 
-  const handleToggleTask = async (taskId: number) => {
-    if (!user) return
-
-    try {
-      const updatedTask = await taskAPI.toggleComplete(user.id, taskId)
-      setTasks(tasks.map(task =>
-        task.id === taskId ? updatedTask : task
-      ))
-      toast.success(updatedTask.completed ? 'Task completed!' : 'Task marked as active')
-    } catch (err: any) {
-      toast.error('Failed to update task')
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !addingTask) {
+      handleAddTask()
     }
   }
 
@@ -140,199 +124,122 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
-  // Filter and search tasks
-  const filteredTasks = useMemo(() => {
-    let result = tasks
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter(
-        task =>
-          task.title.toLowerCase().includes(query) ||
-          task.description.toLowerCase().includes(query)
-      )
-    }
-
-    // Apply completion filter
-    if (activeFilter === 'active') {
-      result = result.filter(task => !task.completed)
-    } else if (activeFilter === 'completed') {
-      result = result.filter(task => task.completed)
-    }
-
-    return result
-  }, [tasks, searchQuery, activeFilter])
-
-  // Task counts for filter tabs
-  const taskCounts = useMemo(() => ({
-    all: tasks.length,
-    active: tasks.filter(t => !t.completed).length,
-    completed: tasks.filter(t => t.completed).length
-  }), [tasks])
+  // Helper function to get card color based on index
+  const getTaskColor = (index: number) => {
+    return colorRotation[index % colorRotation.length]
+  }
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading your tasks...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-300">Loading your tasks...</p>
         </div>
       </div>
     )
   }
 
-  const completedCount = tasks.filter(t => t.completed).length
-  const totalCount = tasks.length
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <CheckSquare className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Evolution of Todo
-                </h1>
-                <p className="text-xs text-gray-500">AI-Native Task Management</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">{user?.name}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                icon={<LogOut className="w-4 h-4" />}
-                className="hover:bg-gray-100 text-gray-700"
-              >
-                Logout
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-4 md:p-8">
+      {/* Top Bar with User Info */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <div className="flex justify-end items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-2 bg-slate-700/50 rounded-lg border border-slate-600">
+            <User className="w-4 h-4 text-purple-400" />
+            <span className="text-sm font-medium text-white">{user?.name}</span>
           </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg border border-slate-600 text-white transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm hidden sm:inline">Logout</span>
+          </button>
         </div>
-      </nav>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">
-                My Tasks
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {completedCount} of {totalCount} tasks completed {completedCount > 0 && `(${Math.round((completedCount / totalCount) * 100)}%)`}
-              </p>
-            </div>
-          </div>
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <h1 className="text-3xl md:text-5xl font-bold text-white text-center mb-8 md:mb-12 tracking-wide drop-shadow-[0_0_25px_rgba(168,85,247,0.4)]">
+          What's the Plan for Today?
+        </h1>
+
+        {/* Add Todo Section */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Add a todo"
+            disabled={addingTask}
+            className="flex-1 bg-slate-800/50 border-2 border-purple-500 rounded-xl px-4 py-3 md:px-6 md:py-4 text-white text-base md:text-lg placeholder-gray-400 focus:outline-none focus:border-purple-400 transition-colors disabled:opacity-50"
+          />
+          <button
+            onClick={handleAddTask}
+            disabled={addingTask || !newTask.trim()}
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-white font-semibold px-6 py-3 md:px-8 md:py-4 rounded-xl transition-all transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
+          >
+            {addingTask ? 'Adding...' : 'Add Todo'}
+          </button>
         </div>
 
-        {/* Task Statistics */}
-        {tasks.length > 0 && (
-          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-            <TaskStats tasks={tasks} />
+        {/* Task List */}
+        {loading && tasks.length === 0 ? (
+          <div className="text-center text-gray-400 text-lg mt-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            Loading tasks...
           </div>
-        )}
-
-        {/* Add Task Form - Always Visible */}
-        <div className="mb-8">
-          <AddTaskForm onAdd={handleAddTask} />
-        </div>
-
-        {/* Search and Filters */}
-        {tasks.length > 0 && (
-          <div className="mb-6 space-y-4">
-            <TaskSearch
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search tasks by title or description..."
-            />
-            <TaskFilters
-              activeFilter={activeFilter}
-              taskCounts={taskCounts}
-              onFilterChange={setActiveFilter}
-            />
+        ) : tasks.length === 0 ? (
+          <div className="text-center text-gray-400 text-lg md:text-xl mt-16 space-y-3">
+            <div className="text-6xl mb-4">📝</div>
+            <p className="font-medium">No tasks yet.</p>
+            <p className="text-base text-gray-500">Add one to get started!</p>
           </div>
-        )}
+        ) : (
+          <div className="space-y-3">
+            {/* Reversed order - newest tasks appear at top with highest numbers */}
+            {[...tasks].reverse().map((task, index) => {
+              const taskNumber = tasks.length - index
+              const colorIndex = (tasks.length - 1 - index) % colorRotation.length
+              const color = colorRotation[colorIndex]
 
-        {/* Task Grid */}
-        <div>
-          {loading && tasks.length === 0 ? (
-            // Skeleton loading
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <TaskItemSkeleton />
-              <TaskItemSkeleton />
-              <TaskItemSkeleton />
-            </div>
-          ) : filteredTasks.length === 0 ? (
-            // Empty state
-            tasks.length === 0 ? (
-              <EmptyState
-                icon={<CheckSquare className="w-16 h-16" />}
-                title="No tasks yet"
-                description="Create your first task to get started with organizing your work!"
-              />
-            ) : searchQuery ? (
-              <EmptyState
-                icon={<FilterIcon className="w-16 h-16" />}
-                title="No tasks found"
-                description="Try adjusting your search query or filters"
-                action={{
-                  label: 'Clear Search',
-                  onClick: () => setSearchQuery('')
-                }}
-              />
-            ) : (
-              <EmptyState
-                icon={<CheckSquare className="w-16 h-16" />}
-                title={activeFilter === 'active' ? 'No active tasks' : 'No completed tasks'}
-                description={
-                  activeFilter === 'active'
-                    ? 'All your tasks are completed! Great work!'
-                    : 'Start completing tasks to see them here'
-                }
-                action={{
-                  label: 'Show All Tasks',
-                  onClick: () => setActiveFilter('all')
-                }}
-              />
-            )
-          ) : (
-            // Task grid with staggered animation
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {filteredTasks.map((task, index) => (
+              return (
                 <div
                   key={task.id}
-                  className="animate-in fade-in slide-in-from-bottom-2 duration-300"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className={`${color.bg} rounded-xl p-4 md:p-5 flex items-center justify-between text-white shadow-lg hover:shadow-2xl transition-all group ${color.hover}`}
                 >
-                  <TaskItem
-                    task={task}
-                    onToggle={handleToggleTask}
-                    onDelete={async (taskId) => {
-                      const taskToDelete = tasks.find(t => t.id === taskId)
-                      if (taskToDelete) {
-                        setDeletingTask({ id: taskId, title: taskToDelete.title })
-                      }
-                    }}
-                    onEdit={setEditingTask}
-                  />
+                  <span className="text-base md:text-xl font-medium flex-1 mr-4">
+                    <span className="font-bold">{taskNumber}</span> - {task.title}
+                  </span>
+                  <div className="flex gap-2 md:gap-3 flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        const taskToDelete = tasks.find(t => t.id === task.id)
+                        if (taskToDelete) {
+                          setDeletingTask({ id: task.id, title: taskToDelete.title })
+                        }
+                      }}
+                      className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                      title="Delete task"
+                    >
+                      <Trash2 size={18} className="md:w-5 md:h-5" />
+                    </button>
+                    <button
+                      onClick={() => setEditingTask(task)}
+                      className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                      title="Edit task"
+                    >
+                      <Edit2 size={18} className="md:w-5 md:h-5" />
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Edit Task Modal */}
       <EditTaskModal

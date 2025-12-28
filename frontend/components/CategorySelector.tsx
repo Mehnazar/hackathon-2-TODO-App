@@ -28,7 +28,6 @@ export default function CategorySelector({ value, onChange, className = '' }: Ca
             style={{
               backgroundColor: isSelected ? cat.color : cat.bg,
               color: isSelected ? 'white' : cat.color,
-              ringColor: cat.color,
             }}
           >
             {cat.name}

@@ -1,6 +1,10 @@
+'use client'
+
+import { motion } from 'framer-motion'
 import { Task } from '@/types/task'
-import { CheckCircle2, Circle, AlertCircle, TrendingUp } from 'lucide-react'
+import { CheckCircle2, Circle, AlertCircle, TrendingUp, Target } from 'lucide-react'
 import { isPast } from 'date-fns'
+import { cn } from '@/lib/cn'
 
 interface TaskStatsProps {
   tasks: Task[]
@@ -26,103 +30,230 @@ export default function TaskStats({ tasks }: TaskStatsProps) {
       label: 'Total Tasks',
       value: totalTasks,
       icon: Circle,
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700',
+      gradient: 'from-indigo-500 to-purple-600',
+      bgColor: 'bg-gradient-to-br from-indigo-50 to-purple-50',
+      iconBg: 'bg-indigo-500',
+      textColor: 'text-indigo-700',
+      ringColor: 'ring-indigo-200',
     },
     {
       label: 'Completed',
       value: completedTasks,
       icon: CheckCircle2,
-      color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-700',
+      gradient: 'from-emerald-500 to-teal-600',
+      bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50',
+      iconBg: 'bg-emerald-500',
+      textColor: 'text-emerald-700',
+      ringColor: 'ring-emerald-200',
     },
     {
       label: 'Active',
       value: activeTasks,
       icon: TrendingUp,
-      color: 'from-orange-500 to-amber-500',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-700',
+      gradient: 'from-amber-500 to-orange-600',
+      bgColor: 'bg-gradient-to-br from-amber-50 to-orange-50',
+      iconBg: 'bg-amber-500',
+      textColor: 'text-amber-700',
+      ringColor: 'ring-amber-200',
     },
     {
       label: 'Overdue',
       value: overdueTasks,
       icon: AlertCircle,
-      color: 'from-red-500 to-pink-500',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-700',
+      gradient: 'from-rose-500 to-pink-600',
+      bgColor: 'bg-gradient-to-br from-rose-50 to-pink-50',
+      iconBg: 'bg-rose-500',
+      textColor: 'text-rose-700',
+      ringColor: 'ring-rose-200',
     },
   ]
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  }
 
   return (
     <div className="space-y-6">
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((stat) => {
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        {stats.map((stat, index) => {
           const Icon = stat.icon
           return (
-            <div
+            <motion.div
               key={stat.label}
-              className={`${stat.bgColor} rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow`}
+              variants={itemVariants}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className={cn(
+                'relative overflow-hidden rounded-2xl p-5 border-2 border-transparent transition-all',
+                stat.bgColor,
+                'hover:shadow-xl hover:border-white cursor-pointer'
+              )}
             >
-              <div className="flex items-center justify-between mb-2">
-                <Icon className={`w-5 h-5 ${stat.textColor}`} />
+              {/* Background gradient overlay */}
+              <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity">
+                <div className={cn('absolute inset-0 bg-gradient-to-br opacity-5', stat.gradient)} />
               </div>
-              <div className={`text-3xl font-bold ${stat.textColor} mb-1`}>
-                {stat.value}
+
+              <div className="relative">
+                {/* Icon */}
+                <div className={cn(
+                  'inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4',
+                  'bg-white shadow-lg',
+                  stat.iconBg.replace('bg-', 'shadow-'),
+                  'shadow-lg'
+                )}>
+                  <Icon className={cn('w-6 h-6 text-white', stat.iconBg)} />
+                </div>
+
+                {/* Value with count-up effect */}
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: index * 0.1 + 0.2, type: 'spring', stiffness: 200 }}
+                  className={cn('text-4xl font-bold mb-1', stat.textColor)}
+                >
+                  {stat.value}
+                </motion.div>
+
+                {/* Label */}
+                <div className="text-sm font-medium text-slate-600">{stat.label}</div>
               </div>
-              <div className="text-sm text-gray-600">{stat.label}</div>
-            </div>
+
+              {/* Decorative corner accent */}
+              <div className={cn(
+                'absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-10',
+                stat.iconBg
+              )} />
+            </motion.div>
           )
         })}
-      </div>
+      </motion.div>
 
       {/* Completion Rate Bar */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">Completion Rate</h3>
-          <span className="text-2xl font-bold text-blue-600">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-lg hover:shadow-xl transition-all"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+              <Target className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">Completion Rate</h3>
+          </div>
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.6, type: 'spring', stiffness: 200 }}
+            className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+          >
             {completionRate}%
-          </span>
+          </motion.span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-          <div
-            className="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${completionRate}%` }}
-          />
+
+        {/* Progress bar */}
+        <div className="relative w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${completionRate}%` }}
+            transition={{ delay: 0.7, duration: 1, ease: 'easeOut' }}
+            className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/30"
+          >
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          </motion.div>
         </div>
-      </div>
+
+        {/* Milestone markers */}
+        <div className="flex justify-between mt-2 text-xs text-slate-400 font-medium">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+      </motion.div>
 
       {/* Priority Breakdown */}
       {activeTasks > 0 && (
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Tasks by Priority</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span className="text-sm font-medium text-gray-700">High Priority</span>
-              </div>
-              <span className="text-sm font-bold text-red-700">{highPriority}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                <span className="text-sm font-medium text-gray-700">Medium Priority</span>
-              </div>
-              <span className="text-sm font-bold text-amber-700">{mediumPriority}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-sm font-medium text-gray-700">Low Priority</span>
-              </div>
-              <span className="text-sm font-bold text-blue-700">{lowPriority}</span>
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-lg hover:shadow-xl transition-all"
+        >
+          <h3 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600" />
+            Active Tasks by Priority
+          </h3>
+
+          <div className="space-y-4">
+            {[
+              { priority: 'High Priority', count: highPriority, color: 'rose', value: highPriority },
+              { priority: 'Medium Priority', count: mediumPriority, color: 'amber', value: mediumPriority },
+              { priority: 'Low Priority', count: lowPriority, color: 'indigo', value: lowPriority },
+            ].map((item, index) => {
+              const percentage = activeTasks > 0 ? (item.count / activeTasks) * 100 : 0
+              return (
+                <div key={item.priority} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        'w-3 h-3 rounded-full',
+                        item.color === 'rose' && 'bg-rose-500',
+                        item.color === 'amber' && 'bg-amber-500',
+                        item.color === 'indigo' && 'bg-indigo-500'
+                      )} />
+                      <span className="text-sm font-semibold text-slate-700">{item.priority}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        'text-sm font-bold',
+                        item.color === 'rose' && 'text-rose-700',
+                        item.color === 'amber' && 'text-amber-700',
+                        item.color === 'indigo' && 'text-indigo-700'
+                      )}>
+                        {item.count}
+                      </span>
+                      <span className="text-xs text-slate-400">({Math.round(percentage)}%)</span>
+                    </div>
+                  </div>
+
+                  {/* Mini progress bar */}
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentage}%` }}
+                      transition={{ delay: 0.8 + index * 0.1, duration: 0.6, ease: 'easeOut' }}
+                      className={cn(
+                        'h-full rounded-full',
+                        item.color === 'rose' && 'bg-rose-500',
+                        item.color === 'amber' && 'bg-amber-500',
+                        item.color === 'indigo' && 'bg-indigo-500'
+                      )}
+                    />
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   )
