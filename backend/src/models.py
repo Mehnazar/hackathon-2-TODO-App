@@ -37,5 +37,8 @@ class Task(SQLModel, table=True):
     title: str = Field(max_length=200)
     description: str = Field(default="", max_length=1000)
     completed: bool = Field(default=False, index=True)
+    priority: str = Field(default="medium", max_length=20)  # low, medium, high
+    category: Optional[str] = Field(default=None, max_length=50)
+    due_date: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

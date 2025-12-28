@@ -19,22 +19,22 @@ export default function Home() {
   }, [router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-4xl w-full mx-4">
         <div className="text-center space-y-8">
           {/* Hero Section */}
           <div className="space-y-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mb-4 animate-pulse shadow-lg">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-500 rounded-2xl mb-4 shadow-lg">
               <CheckSquare className="w-12 h-12 text-white" />
             </div>
 
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
               Evolution of Todo
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 font-medium">
+            <p className="text-xl md:text-2xl text-blue-600 font-semibold">
               AI-Native Task Management System
             </p>
-            <p className="text-lg text-gray-500">
+            <p className="text-lg text-gray-600">
               Professional enterprise task management with secure authentication
             </p>
           </div>
@@ -63,15 +63,15 @@ export default function Home() {
           </div>
 
           {/* Features Section */}
-          <div className="pt-12 mt-12 border-t-2 border-gray-200">
+          <div className="pt-12 mt-12 border-t border-gray-200">
             <h2 className="text-3xl font-bold text-gray-900 mb-8">
               Enterprise Features
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card variant="elevated" hover className="text-left">
+              <Card variant="elevated" hover className="text-left border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all">
                 <div className="space-y-4">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-lg">
-                    <Shield className="w-6 h-6 text-emerald-600" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-50 rounded-lg">
+                    <Shield className="w-6 h-6 text-blue-600" />
                   </div>
                   <h3 className="font-semibold text-xl text-gray-900">
                     Secure Authentication
@@ -82,24 +82,24 @@ export default function Home() {
                 </div>
               </Card>
 
-              <Card variant="elevated" hover className="text-left">
+              <Card variant="elevated" hover className="text-left border border-gray-200 hover:border-green-400 hover:shadow-lg transition-all">
                 <div className="space-y-4">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-100 rounded-lg">
-                    <CheckSquare className="w-6 h-6 text-teal-600" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-green-50 rounded-lg">
+                    <CheckSquare className="w-6 h-6 text-green-600" />
                   </div>
                   <h3 className="font-semibold text-xl text-gray-900">
                     Task Management
                   </h3>
                   <p className="text-gray-600">
-                    Create, update, search, and filter tasks with an intuitive professional interface
+                    Create, update, search, and filter tasks with priority levels, categories, and due dates
                   </p>
                 </div>
               </Card>
 
-              <Card variant="elevated" hover className="text-left">
+              <Card variant="elevated" hover className="text-left border border-gray-200 hover:border-purple-400 hover:shadow-lg transition-all">
                 <div className="space-y-4">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-cyan-100 rounded-lg">
-                    <Lock className="w-6 h-6 text-cyan-600" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-50 rounded-lg">
+                    <Lock className="w-6 h-6 text-purple-600" />
                   </div>
                   <h3 className="font-semibold text-xl text-gray-900">
                     User Isolation

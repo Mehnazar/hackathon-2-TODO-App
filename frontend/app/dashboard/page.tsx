@@ -16,6 +16,7 @@ import { DeleteConfirmModal } from '@/components/DeleteConfirmModal'
 import { EmptyState } from '@/components/EmptyState'
 import { TaskItemSkeleton } from '@/components/ui/Skeleton'
 import { Button } from '@/components/ui/Button'
+import TaskStats from '@/components/TaskStats'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -58,11 +59,23 @@ export default function DashboardPage() {
     }
   }
 
-  const handleAddTask = async (title: string, description: string) => {
+  const handleAddTask = async (
+    title: string,
+    description: string,
+    priority: 'low' | 'medium' | 'high',
+    dueDate?: string,
+    category?: string
+  ) => {
     if (!user) return
 
     try {
-      const newTask = await taskAPI.createTask(user.id, { title, description })
+      const newTask = await taskAPI.createTask(user.id, {
+        title,
+        description,
+        priority,
+        due_date: dueDate,
+        category
+      })
       setTasks([newTask, ...tasks])
       toast.success('Task created successfully!')
     } catch (err: any) {
@@ -85,7 +98,16 @@ export default function DashboardPage() {
     }
   }
 
-  const handleEditTask = async (taskId: number, data: { title: string; description: string }) => {
+  const handleEditTask = async (
+    taskId: number,
+    data: {
+      title: string
+      description: string
+      priority: 'low' | 'medium' | 'high'
+      due_date?: string
+      category?: string
+    }
+  ) => {
     if (!user) return
 
     try {
@@ -151,9 +173,9 @@ export default function DashboardPage() {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-lg text-gray-600">Loading your tasks...</p>
         </div>
       </div>
@@ -164,25 +186,33 @@ export default function DashboardPage() {
   const totalCount = tasks.length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Navigation Bar */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <CheckSquare className="w-6 h-6 text-teal-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Evolution of Todo</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <CheckSquare className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Evolution of Todo
+                </h1>
+                <p className="text-xs text-gray-500">AI-Native Task Management</p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
-                <span>{user?.name} ({user?.email})</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                <User className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">{user?.name}</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
                 icon={<LogOut className="w-4 h-4" />}
+                className="hover:bg-gray-100 text-gray-700"
               >
                 Logout
               </Button>
@@ -192,29 +222,41 @@ export default function DashboardPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">My Tasks</h2>
-          <p className="text-gray-600">
-            {completedCount} of {totalCount} tasks completed
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                My Tasks
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {completedCount} of {totalCount} tasks completed {completedCount > 0 && `(${Math.round((completedCount / totalCount) * 100)}%)`}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Task Statistics */}
         {tasks.length > 0 && (
-          <div className="mb-6">
-            <TaskSearch
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search tasks..."
-            />
+          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+            <TaskStats tasks={tasks} />
           </div>
         )}
 
-        {/* Filter Tabs */}
+        {/* Add Task Form - Always Visible */}
+        <div className="mb-8">
+          <AddTaskForm onAdd={handleAddTask} />
+        </div>
+
+        {/* Search and Filters */}
         {tasks.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6 space-y-4">
+            <TaskSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search tasks by title or description..."
+            />
             <TaskFilters
               activeFilter={activeFilter}
               taskCounts={taskCounts}
@@ -223,20 +265,15 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Add Task Form */}
-        <div className="mb-8">
-          <AddTaskForm onAdd={handleAddTask} />
-        </div>
-
-        {/* Task List */}
-        <div className="space-y-4">
+        {/* Task Grid */}
+        <div>
           {loading && tasks.length === 0 ? (
             // Skeleton loading
-            <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <TaskItemSkeleton />
               <TaskItemSkeleton />
               <TaskItemSkeleton />
-            </>
+            </div>
           ) : filteredTasks.length === 0 ? (
             // Empty state
             tasks.length === 0 ? (
@@ -271,21 +308,28 @@ export default function DashboardPage() {
               />
             )
           ) : (
-            // Task items
-            filteredTasks.map(task => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onToggle={handleToggleTask}
-                onDelete={(taskId) => {
-                  const taskToDelete = tasks.find(t => t.id === taskId)
-                  if (taskToDelete) {
-                    setDeletingTask({ id: taskId, title: taskToDelete.title })
-                  }
-                }}
-                onEdit={setEditingTask}
-              />
-            ))
+            // Task grid with staggered animation
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {filteredTasks.map((task, index) => (
+                <div
+                  key={task.id}
+                  className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <TaskItem
+                    task={task}
+                    onToggle={handleToggleTask}
+                    onDelete={async (taskId) => {
+                      const taskToDelete = tasks.find(t => t.id === taskId)
+                      if (taskToDelete) {
+                        setDeletingTask({ id: taskId, title: taskToDelete.title })
+                      }
+                    }}
+                    onEdit={setEditingTask}
+                  />
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </main>

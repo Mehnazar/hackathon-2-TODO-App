@@ -9,7 +9,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   fullWidth?: boolean
 }
 
-export function Input({
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
   label,
   error,
   helperText,
@@ -18,14 +18,14 @@ export function Input({
   className,
   id,
   ...props
-}: InputProps) {
+}, ref) => {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
-  const baseStyles = 'px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 transition-colors duration-200'
+  const baseStyles = 'px-4 py-2.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition-all duration-200'
 
   const stateStyles = error
     ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
-    : 'border-gray-300 focus:border-teal-500 focus:ring-teal-200'
+    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
 
   const disabledStyles = props.disabled ? 'bg-gray-100 cursor-not-allowed' : ''
   const widthStyles = fullWidth ? 'w-full' : ''
@@ -50,6 +50,7 @@ export function Input({
         )}
 
         <input
+          ref={ref}
           id={inputId}
           className={cn(
             baseStyles,
@@ -76,4 +77,6 @@ export function Input({
       )}
     </div>
   )
-}
+})
+
+Input.displayName = 'Input'

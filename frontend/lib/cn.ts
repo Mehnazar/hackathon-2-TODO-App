@@ -1,7 +1,9 @@
 /**
  * Utility for merging Tailwind CSS class names
- * Filters out falsy values and joins classes with spaces
+ * Uses clsx for better class merging
  */
-export function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ')
+import { clsx, type ClassValue } from 'clsx'
+
+export function cn(...inputs: ClassValue[]): string {
+  return clsx(inputs)
 }

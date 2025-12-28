@@ -35,8 +35,8 @@ export function TaskFilters({ activeFilter, taskCounts, onFilterChange }: TaskFi
             className={cn(
               'px-4 py-2 rounded-lg font-medium transition-all duration-200',
               isActive
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-2 border-teal-600 shadow-md'
-                : 'bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50'
+                ? 'bg-blue-600 text-white border-2 border-blue-600 shadow-md hover:bg-blue-700'
+                : 'bg-white text-gray-700 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
             )}
           >
             {filter.label} ({count})

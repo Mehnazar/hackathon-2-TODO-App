@@ -5,18 +5,29 @@ import { Modal } from './ui/Modal'
 import { Input } from './ui/Input'
 import { Textarea } from './ui/Textarea'
 import { Button } from './ui/Button'
-import { Task } from '@/types/task'
+import { Task, TaskPriority } from '@/types/task'
+import CategorySelector from './CategorySelector'
+import DueDatePicker from './DueDatePicker'
 
 export interface EditTaskModalProps {
   task: Task | null
   isOpen: boolean
   onClose: () => void
-  onSave: (taskId: number, data: { title: string; description: string }) => Promise<void>
+  onSave: (taskId: number, data: {
+    title: string
+    description: string
+    priority: TaskPriority
+    due_date?: string
+    category?: string
+  }) => Promise<void>
 }
 
 export function EditTaskModal({ task, isOpen, onClose, onSave }: EditTaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [priority, setPriority] = useState<TaskPriority>('medium')
+  const [dueDate, setDueDate] = useState('')
+  const [category, setCategory] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -24,6 +35,9 @@ export function EditTaskModal({ task, isOpen, onClose, onSave }: EditTaskModalPr
     if (task) {
       setTitle(task.title)
       setDescription(task.description)
+      setPriority(task.priority)
+      setDueDate(task.due_date || '')
+      setCategory(task.category || '')
       setError('')
     }
   }, [task])
@@ -41,7 +55,13 @@ export function EditTaskModal({ task, isOpen, onClose, onSave }: EditTaskModalPr
 
     setLoading(true)
     try {
-      await onSave(task.id, { title, description })
+      await onSave(task.id, {
+        title,
+        description,
+        priority,
+        due_date: dueDate || undefined,
+        category: category || undefined
+      })
       onClose()
     } catch (err: any) {
       setError(err.response?.data?.detail?.error?.message || 'Failed to update task')
@@ -91,6 +111,44 @@ export function EditTaskModal({ task, isOpen, onClose, onSave }: EditTaskModalPr
           maxLength={1000}
           rows={4}
         />
+
+        {/* Priority Selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Priority Level
+          </label>
+          <div className="flex gap-3">
+            {(['low', 'medium', 'high'] as TaskPriority[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPriority(p)}
+                className={`
+                  flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all
+                  ${priority === p
+                    ? p === 'high'
+                      ? 'bg-red-500 text-white shadow-lg scale-105'
+                      : p === 'medium'
+                      ? 'bg-amber-500 text-white shadow-lg scale-105'
+                      : 'bg-blue-500 text-white shadow-lg scale-105'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }
+                `}
+              >
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <DueDatePicker value={dueDate} onChange={setDueDate} />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Category (optional)
+          </label>
+          <CategorySelector value={category} onChange={setCategory} />
+        </div>
       </form>
     </Modal>
   )
